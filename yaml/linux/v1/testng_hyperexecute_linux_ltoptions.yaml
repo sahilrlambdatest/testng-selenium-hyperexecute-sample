@@ -21,12 +21,6 @@ project:
   id: 01KANN1XRX2BJNMV9321PDPTBQ
 
 
-sourcePayload:
-  platform: git
-  link: https://github.com/sahilrlambdatest/testng-selenium-hyperexecute-sample.git
-  ref: main
-  accessToken: ${{ .secrets.<GIT_PAT> }}
-
 testDiscovery:
   type: raw
   mode: static
