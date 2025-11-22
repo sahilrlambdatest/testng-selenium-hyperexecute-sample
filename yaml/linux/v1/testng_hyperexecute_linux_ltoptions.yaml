@@ -16,6 +16,9 @@ cacheDirectories:
 pre:
   - mvn dependency:resolve
 
+project:
+  name: 'Rerun Check'
+
 testDiscovery:
   type: raw
   mode: static
