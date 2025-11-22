@@ -18,7 +18,7 @@ pre:
 
 testDiscovery:
   type: raw
-  mode: remote
+  mode: static
   command: grep 'test name' xml/testng_linux.xml | awk '{print$2}' | sed 's/name=//g' | sed 's/>//g'
 
 testRunnerCommand: mvn test -Dplatname=linux -DselectedTests=$test
