@@ -155,9 +155,10 @@ public class Test1 {
   @AfterMethod
     public void tearDown() {
       if (driver != null) {
-        ((JavascriptExecutor) driver).executeScript("lambda-status=failed");
+        ((JavascriptExecutor) driver).executeScript("lambda-status=" + status);
         driver.quit();
       }
     }
 
 }
+
