@@ -20,7 +20,7 @@ project:
   name: new project
   id: 01KANN1XRX2BJNMV9321PDPTBQ
 
-slackChannel: sahil-custom_1-public
+slackChannel: sahil-custom_1-public, sahil-custom_2-public
 
 testDiscovery:
   type: raw
