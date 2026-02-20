@@ -1,9 +1,27 @@
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.time.Duration;
+import java.util.HashMap;
+
 import org.apache.commons.io.FileUtils;
-import org.openqa.selenium.*;
-import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Keys;
+import org.openqa.selenium.MutableCapabilities;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.edge.EdgeOptions;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.testng.annotations.*;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Parameters;
+import org.testng.annotations.Test;
 
 import com.aventstack.extentreports.ExtentReports;
 import com.aventstack.extentreports.ExtentTest;
@@ -12,13 +30,7 @@ import com.aventstack.extentreports.Status;
 import com.aventstack.extentreports.reporter.ExtentSparkReporter;
 import com.aventstack.extentreports.reporter.JsonFormatter;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-
-public class Test1
-{
+public class Test1 {
     RemoteWebDriver driver = null;
     public static String status = "passed";
     public static String username = System.getenv("LT_USERNAME");
@@ -28,49 +40,66 @@ public class Test1
     JsonFormatter json = new JsonFormatter("target/surefire-reports/json/Extent_Report.json");
     ExtentReports extent = new ExtentReports();
 
-//    String testURL = "https://todomvc.com/examples/react/#/";
+    // String testURL = "https://todomvc.com/examples/react/#/";
     String testURL = "https://lambdatest.github.io/sample-todo-app/";
     String testURLTitle = "Sample page - lambdatest.com";
+
     @BeforeMethod
-    @Parameters(value={"browser","version","platform", "resolution"})
-    public void testSetUp(String browser, String version, String platform, String resolution) throws Exception
-    {
-        String platformName = System.getenv("HYPEREXECUTE_PLATFORM") != null ? System.getenv("HYPEREXECUTE_PLATFORM") : platform;
-        
-        DesiredCapabilities capabilities = new DesiredCapabilities();
+    @Parameters(value = { "browser", "version", "platform", "resolution" })
+    public void testSetUp(String browser, String version, String platform, String resolution) throws Exception {
+        String platformName = System.getenv("HYPEREXECUTE_PLATFORM") != null ? System.getenv("HYPEREXECUTE_PLATFORM")
+                : platform;
 
-        capabilities.setCapability("build", "[HyperExecute - 1] Demonstration of the TestNG Framework");
-        capabilities.setCapability("name", "[HyperExecute - 1] Demonstration of the TestNG Framework");
-        capabilities.setCapability("platform", platformName);
-        capabilities.setCapability("browserName", browser);
-        capabilities.setCapability("version", version);
+        // LambdaTest specific options using W3C protocol (LT:Options)
+        HashMap<String, Object> ltOptions = new HashMap<>();
+        ltOptions.put("build", "[HyperExecute - 1] Demonstration of the TestNG Framework");
+        ltOptions.put("name", "[HyperExecute - 1] Demonstration of the TestNG Framework");
+        ltOptions.put("platformName", platformName);
+        ltOptions.put("tunnel", false);
+        ltOptions.put("network", true);
+        ltOptions.put("console", true);
+        ltOptions.put("visual", true);
+        ltOptions.put("selenium_version", "4.24.0");
+        ltOptions.put("w3c", true);
 
-        capabilities.setCapability("tunnel",false);
-        capabilities.setCapability("network",true);
-        capabilities.setCapability("console",true);
-        capabilities.setCapability("visual",true);
-        capabilities.setCapability("selenium_version", "4.24.0");
-        
+        // Accessibility options
+        ltOptions.put("accessibility", true);
+        ltOptions.put("accessibility.wcagVersion", "wcag21a");
+        ltOptions.put("accessibility.bestPractice", false);
+        ltOptions.put("accessibility.needsReview", true);
 
-        capabilities.setCapability("accessibility", true); // Enable accessibility testing
-        capabilities.setCapability("accessibility.wcagVersion", "wcag21a"); // Specify WCAG version (e.g., WCAG 2.1 Level A)
-        capabilities.setCapability("accessibility.bestPractice", false); // Exclude best practice issues from results
-        capabilities.setCapability("accessibility.needsReview", true); // Include issues that need review
-
-        try
-        {
-            driver = new RemoteWebDriver(new URL("https://" + username + ":" + access_key + "@hub.lambdatest.com/wd/hub"), capabilities);
+        // Use browser-specific Options class for W3C compliance
+        MutableCapabilities browserOptions;
+        switch (browser.toLowerCase()) {
+            case "chrome":
+                browserOptions = new ChromeOptions();
+                break;
+            case "microsoftedge":
+            case "edge":
+                browserOptions = new EdgeOptions();
+                break;
+            case "firefox":
+                browserOptions = new FirefoxOptions();
+                break;
+            default:
+                browserOptions = new ChromeOptions();
         }
-        catch (MalformedURLException e)
-        {
+
+        browserOptions.setCapability("browserVersion", version);
+        browserOptions.setCapability("platformName", platformName);
+        browserOptions.setCapability("LT:Options", ltOptions);
+
+        try {
+            driver = new RemoteWebDriver(
+                    new URL("https://" + username + ":" + access_key + "@hub.lambdatest.com/wd/hub"), browserOptions);
+        } catch (MalformedURLException e) {
             System.out.println("Invalid grid URL");
         }
         System.out.println("Started session");
     }
 
-    @Test(description="To Do App on React App")
-    public void test1_element_addition_1() throws InterruptedException
-    {
+    @Test(description = "To Do App on React App")
+    public void test1_element_addition_1() throws InterruptedException {
         extent.attachReporter(json, spark);
         ExtentTest test1 = extent.createTest("demo application test 1-1", "To Do App test 1");
 
@@ -78,7 +107,7 @@ public class Test1
         Thread.sleep(5000);
 
         test1.log(Status.PASS, "URL is opened");
-        WebDriverWait wait = new WebDriverWait(driver, 5);
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
         test1.log(Status.PASS, "Wait created");
 
         By textField = By.id("sampletodotext");
@@ -96,29 +125,30 @@ public class Test1
 
         WebElement temp_element;
 
-        int totalCount = item_count+5;
-        int remaining = totalCount-1;
+        int totalCount = item_count + 5;
+        int remaining = totalCount - 1;
 
         for (int i = 1; i < totalCount; i++, remaining--) {
 
-            String xpath = "(//input[@type='checkbox'])["+i+"]";
+            String xpath = "(//input[@type='checkbox'])[" + i + "]";
 
             driver.findElement(By.xpath(xpath)).click();
             Thread.sleep(500);
             test1.log(Status.PASS, "Item No. " + i + " marked completed");
             By remainingItem = By.className("ng-binding");
             String actualText = driver.findElement(remainingItem).getText();
-            String expectedText = remaining+" of "+totalCount+" tasks remaining";
+            String expectedText = remaining + " of " + totalCount + " tasks remaining";
 
             if (!actualText.contains(expectedText)) {
                 test1.log(Status.FAIL, "Wrong Text Description");
-                System.out.println("unmatched at "+expectedText+" "+actualText);
+                System.out.println("unmatched at " + expectedText + " " + actualText);
                 status = "failed";
             }
             Thread.sleep(500);
 
             String base64Screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.BASE64);
-            test1.log(Status.PASS, "Item No. " + i + " completed", MediaEntityBuilder.createScreenCaptureFromBase64String(base64Screenshot, "sp-test").build());
+            test1.log(Status.PASS, "Item No. " + i + " completed",
+                    MediaEntityBuilder.createScreenCaptureFromBase64String(base64Screenshot, "sp-test").build());
         }
 
         extent.flush();
@@ -126,16 +156,15 @@ public class Test1
         /* Once you are outside this code, the list would be empty */
     }
 
-    @Test(description="To Do App on React App")
-    public void test1_element_addition_2() throws InterruptedException, IOException
-    {
+    @Test(description = "To Do App on React App")
+    public void test1_element_addition_2() throws InterruptedException, IOException {
         ExtentTest test2 = extent.createTest("demo application test 1-2", "To Do App test 2");
 
         driver.get(testURL);
         Thread.sleep(5000);
 
         test2.log(Status.PASS, "URL is opened");
-        WebDriverWait wait = new WebDriverWait(driver, 5);
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
         test2.log(Status.PASS, "Wait created");
 
         By textField = By.id("sampletodotext");
@@ -153,23 +182,23 @@ public class Test1
 
         WebElement temp_element;
 
-        int totalCount = item_count+5;
-        int remaining = totalCount-1;
+        int totalCount = item_count + 5;
+        int remaining = totalCount - 1;
 
         for (int i = 1; i < totalCount; i++, remaining--) {
 
-            String xpath = "(//input[@type='checkbox'])["+i+"]";
+            String xpath = "(//input[@type='checkbox'])[" + i + "]";
 
             driver.findElement(By.xpath(xpath)).click();
             Thread.sleep(500);
             test2.log(Status.PASS, "Item No. " + i + " marked completed");
             By remainingItem = By.className("ng-binding");
             String actualText = driver.findElement(remainingItem).getText();
-            String expectedText = remaining+" of "+totalCount+" tasks remaining";
+            String expectedText = remaining + " of " + totalCount + " tasks remaining";
 
             if (!actualText.contains(expectedText)) {
                 test2.log(Status.FAIL, "Wrong Text Description");
-                System.out.println("unmatched at "+expectedText+" "+actualText);
+                System.out.println("unmatched at " + expectedText + " " + actualText);
                 status = "failed";
             }
             Thread.sleep(500);
@@ -178,7 +207,8 @@ public class Test1
             File destFile = new File("target/surefire-reports/json/screenshot.png");
             // Copy the screenshot to destination
             FileUtils.copyFile(srcFile, destFile);
-            test2.log(Status.PASS, "Item No. " + i + " completed", MediaEntityBuilder.createScreenCaptureFromPath(destFile.getAbsolutePath(), "sp-test").build());
+            test2.log(Status.PASS, "Item No. " + i + " completed",
+                    MediaEntityBuilder.createScreenCaptureFromPath(destFile.getAbsolutePath(), "sp-test").build());
         }
 
         extent.flush();
@@ -187,15 +217,10 @@ public class Test1
     }
 
     @AfterMethod
-    public void tearDown()
-    {
-        if (driver != null)
-        {
+    public void tearDown() {
+        if (driver != null) {
             ((JavascriptExecutor) driver).executeScript("lambda-status=" + status);
             driver.quit();
         }
     }
 }
-
-
-
