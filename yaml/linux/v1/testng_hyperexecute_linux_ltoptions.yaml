@@ -24,7 +24,7 @@ slackChannel: sahil-custom_1
 
 testDiscovery:
   type: raw
-  mode: static
+  mode: dynamic
   command: grep 'test name' xml/testng_linux.xml | awk '{print$2}' | sed 's/name=//g' | sed 's/>//g'
 
 testRunnerCommand: mvn test -Dplatname=linux -DselectedTests=$test
